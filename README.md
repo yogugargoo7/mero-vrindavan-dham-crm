@@ -1,169 +1,89 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=2,6,30&height=180&section=header&text=Mero%20Vrindavan%20Dham&fontSize=36&fontColor=fff&animation=twinkling&fontAlignY=38&desc=Production-Ready%20Real%20Estate%20CRM%20%26%20Marketing%20Platform&descAlignY=58&descSize=15" width="100%"/>
+# Real Estate CRM — Subh Sankalp
 
-[![.NET Core](https://img.shields.io/badge/.NET_Core-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
-[![React](https://img.shields.io/badge/React.js-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
-[![Azure](https://img.shields.io/badge/Microsoft_Azure-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white)](https://azure.microsoft.com/)
-[![MS SQL Server](https://img.shields.io/badge/MS_SQL_Server-CC2927?style=for-the-badge&logo=microsoftsqlserver&logoColor=white)]()
-[![GitHub Actions](https://img.shields.io/badge/CI%2FCD-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)]()
+**A production multi-township CRM for plots, receipts, EMIs, commission and leads.**
 
-![Status](https://img.shields.io/badge/Status-Production%20Live-brightgreen?style=flat-square)
-![Auth](https://img.shields.io/badge/Auth-JWT%20%2B%20Role--Based-blue?style=flat-square)
-![API](https://img.shields.io/badge/API-Swagger%20Documented-85EA2D?style=flat-square)
-![Cloud](https://img.shields.io/badge/Cloud-Azure%20App%20Service-0078D4?style=flat-square)
+[![Live](https://img.shields.io/badge/Live-platinumtownship.in-2ea44f?style=flat-square)](https://www.platinumtownship.in)
+![.NET 8](https://img.shields.io/badge/.NET_8-512BD4?style=flat-square&logo=dotnet&logoColor=white)
+![React](https://img.shields.io/badge/React_18-20232A?style=flat-square&logo=react&logoColor=61DAFB)
+![SQL Server](https://img.shields.io/badge/MS_SQL_Server-CC2927?style=flat-square&logo=microsoftsqlserver&logoColor=white)
+![Azure](https://img.shields.io/badge/Azure-0078D4?style=flat-square&logo=microsoftazure&logoColor=white)
 
 </div>
 
----
+> This repository is a public case study. The CRM's source code is private because it is a live company system; the README describes what it does and how it is built.
 
-## 🏢 About
+## Overview
 
-**Mero Vrindavan Dham** is a **production-deployed real estate CRM and marketing platform** built for Subh Sankalp Pvt Ltd. The system manages the complete lifecycle of real estate plots — from customer acquisition to booking, EMI tracking, and receipt generation.
+Sales and accounts staff at Subh Sankalp Pvt Ltd use this CRM every day to book plots, cut receipts, track EMIs, pay associate commission and work leads. It runs **4 townships** with **970+ plots** and **2,600+ receipts**.
 
-> ⚡ *This is not a demo — it's a live business system handling real transactions.*
+Three separate township CRMs were merged into this one system. During the migration, **₹60+ crore** of receipts were reconciled to the rupee.
 
----
+## What it does
 
-## 🌟 Key Highlights
-
-| Feature | Details |
+| Area | Details |
 |---|---|
-| 🔐 **Authentication** | JWT-based with role-based access control |
-| 👥 **User Roles** | Admin · Associate · Customer |
-| 🏗️ **Backend** | .NET Core Web API with Entity Framework Core |
-| ⚛️ **Frontend** | React.js + Vite + Tailwind CSS |
-| ☁️ **Cloud** | Azure App Service + Azure Blob Storage |
-| 🔄 **CI/CD** | Automated GitHub Actions deployment pipeline |
-| 📄 **API Docs** | Full Swagger / OpenAPI documentation |
+| **Plots** | Inventory with size, rate, PLC and status (Available, Tokened, Part Payment, Booked, Sold); bulk import |
+| **Receipts** | Token, part-payment, booking, EMI and NOC receipts, numbered per township and printed as PDF on the township's letterhead |
+| **EMI** | EMI plans and schedules, paid vs pending, EMI receipts |
+| **Commission** | Commission per associate from the receipts they bring in, with payout records and proof |
+| **Leads** | Website and Meta (Facebook) leads land in the CRM and are shared out to associates automatically |
+| **Customers** | Customer login to see their own plot, receipts and dues |
+| **Audit** | Every change recorded: who changed what, and when |
+| **Mobile** | Android app built from the same React code with Capacitor, with Firebase push notifications |
 
----
+## Engineering highlights
 
-## 🏗️ System Architecture
+- **Multi-township data scoping**: every query is limited to the townships a user may open; admins can be company-wide or per township; one township can be private.
+- **Background workers** (.NET hosted services):
+  - token expiry: frees the plot and puts back its own price
+  - lead distribution to associates
+  - site-visit status
+  - one-way sync from two legacy portals (inserts, edits and deletes)
+- **OCR auto-fill**: Tesseract.js reads an Aadhaar or PAN photo in the browser and fills the receipt form.
+- **Money rules enforced in the API**: zero, negative and over-payment receipts are refused, and plot status follows the paid percentage.
+- **Safe production changes**: schema changes are applied by hand and recorded before code ships; data fixes run in one transaction with a backup table and checks.
+
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    CLIENT LAYER                         │
-│   React.js + Vite + Tailwind CSS                        │
-│   (Azure Static Web Apps)                               │
-└─────────────────────┬───────────────────────────────────┘
-                      │ HTTPS REST API
-                      ▼
-┌─────────────────────────────────────────────────────────┐
-│                    API LAYER                            │
-│   .NET Core Web API + ASP.NET Core                      │
-│   JWT Authentication + Role-Based Authorization         │
-│   Swagger / OpenAPI Documentation                       │
-│   (Azure App Service)                                   │
-└──────────┬──────────────────────┬───────────────────────┘
-           │                      │
-           ▼                      ▼
-┌──────────────────┐   ┌──────────────────────────────────┐
-│  DATABASE        │   │  CLOUD STORAGE                   │
-│  MS SQL Server   │   │  Azure Blob Storage              │
-│  Entity FW Core  │   │  (Documents, Media, Receipts)    │
-└──────────────────┘   └──────────────────────────────────┘
+React 18 + Vite + Tailwind  ──►  Azure Static Web Apps
+Android app (Capacitor)             │
+                                    │ HTTPS, JWT
+                                    ▼
+ASP.NET Core Web API (.NET 8) ──►  Azure App Service
+  EF Core · Swagger · BCrypt        │
+  hosted background workers         ├──►  Azure SQL (MS SQL Server)
+                                    ├──►  Azure Blob Storage
+                                    └──►  Firebase Cloud Messaging
+Township websites ──► public plot and lead endpoints
 ```
 
----
+## Tech stack
 
-## ✨ CRM Modules
+- **Backend:** C#, .NET 8, ASP.NET Core Web API, Entity Framework Core, JWT, BCrypt, Swagger/OpenAPI
+- **Frontend:** React 18, Vite, Tailwind CSS, TanStack Query, React Hook Form, Recharts, Tesseract.js
+- **Cloud and delivery:** Azure App Service, Azure Static Web Apps, Azure SQL, Azure Blob Storage, GitHub Actions, Firebase
 
-### 🏡 Plot Management
-- Full plot inventory with status tracking (Available / Booked / Sold)
-- Bulk plot operations and category management
-- Plot search and filtering
-
-### 👤 Customer Management
-- Customer registration and profile management
-- Document upload via Azure Blob Storage
-- Customer-plot relationship tracking
-
-### 💰 EMI & Booking
-- Flexible EMI plan configuration per plot
-- EMI schedule generation and tracking
-- Automated overdue alerts
-
-### 🧾 Receipt Generation
-- PDF receipt printing for payments
-- Booking confirmation documents
-- Transaction history
-
-### 📊 Analytics Dashboard
-- Sales performance metrics
-- Revenue tracking and reporting
-- Customer acquisition analytics
-
-### 🌐 Marketing Website
-- Lead capture chatbot integration
-- Enquiry forms with CRM API integration
-- WhatsApp flow for customer engagement
-
----
-
-## 🛠️ Tech Stack
-
-**Backend**
-```
-Language    : C# (.NET 8)
-Framework   : ASP.NET Core Web API
-Auth        : JWT Bearer Tokens + Role-Based Authorization
-ORM         : Entity Framework Core
-Docs        : Swagger / OpenAPI
-```
-
-**Frontend**
-```
-Framework   : React.js 18
-Build Tool  : Vite
-Styling     : Tailwind CSS
-Features    : CRUD Screens, PDF Printing, Admin Dashboard
-```
-
-**Cloud & DevOps**
-```
-Hosting     : Azure App Service (API) + Azure Static Web Apps (UI)
-Storage     : Azure Blob Storage (Documents & Media)
-CI/CD       : GitHub Actions (Auto-deploy on push)
-Database    : MS SQL Server
-```
-
----
-
-## 🔐 API Endpoints (Sample)
+## API sample
 
 ```http
-POST   /api/auth/login              # JWT Authentication
-GET    /api/plots                   # List all plots
-POST   /api/plots                   # Create new plot
-PUT    /api/plots/{id}/book         # Book a plot
-GET    /api/customers               # Customer list
-POST   /api/emi/generate/{booking}  # Generate EMI schedule
-GET    /api/receipts/{id}/pdf       # Download PDF receipt
-GET    /api/analytics/dashboard     # Analytics summary
+POST /api/Auth/login                       staff sign-in, returns a JWT
+POST /api/Auth/customer-login              customer portal sign-in
+GET  /api/Plots/{id}                       one plot with paid %, balance and stage
+PUT  /api/Plots/{id}                       edit a plot (customer price or new list price)
+POST /api/Receipts/{id}/approve            approve a receipt
+GET  /api/Receipts/{id}/emi-pdf            EMI receipt as PDF
+POST /api/Receipts/process-expired-tokens  run token expiry now
+GET  /api/EMI/schedule                     EMI schedule
+GET  /api/Dashboard/stats                  dashboard figures
+GET  /api/public/plots/summary             plot availability for the websites
+POST /api/public/leads/ingest              website enquiry into the CRM
 ```
 
----
+## Author
 
-## 🚀 Deployment
+**Yogesh Garg**, Full Stack Developer at Subh Sankalp Pvt Ltd
 
-```yaml
-# CI/CD via GitHub Actions — auto deploys on push to main
-- Backend  → Azure App Service
-- Frontend → Azure Static Web Apps
-- Files    → Azure Blob Storage
-```
-
----
-
-## 👨‍💻 Developer
-
-**Yogesh Garg** — Full Stack Developer @ Subh Sankalp Pvt Ltd
-
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat-square&logo=linkedin&logoColor=white)](https://linkedin.com/in/yogesh-garg-dev)
-[![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=flat-square&logo=todoist&logoColor=white)](https://yogeshgarg.dev)
-[![Email](https://img.shields.io/badge/Email-D14836?style=flat-square&logo=gmail&logoColor=white)](mailto:yogugarg000@gmail.com)
-
-> 💡 *Open to Full Stack / Backend opportunities. Let's connect!*
-
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=2,6,30&height=80&section=footer" width="100%"/>
+[LinkedIn](https://www.linkedin.com/in/yogesh-garg-980517232) · [Portfolio](https://yogesh-portfolio-omega-seven.vercel.app) · [GitHub](https://github.com/yogugargoo7)
